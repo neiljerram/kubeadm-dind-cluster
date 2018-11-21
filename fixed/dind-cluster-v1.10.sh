@@ -1817,12 +1817,14 @@ function dind::up {
   esac
   dind::deploy-dashboard
   dind::accelerate-kube-dns
-  if [[ (${CNI_PLUGIN} != "bridge" && ${CNI_PLUGIN} != "ptp") || ${SKIP_SNAPSHOT} ]]; then
-    # This is especially important in case of Calico -
-    # the cluster will not recover after snapshotting
-    # (at least not after restarting from the snapshot)
-    # if Calico installation is interrupted
-    dind::wait-for-ready
+  if [[ ${CNI_PLUGIN} != "custom" ]]; then
+      if [[ (${CNI_PLUGIN} != "bridge" && ${CNI_PLUGIN} != "ptp") || ${SKIP_SNAPSHOT} ]]; then
+	  # This is especially important in case of Calico -
+	  # the cluster will not recover after snapshotting
+	  # (at least not after restarting from the snapshot)
+	  # if Calico installation is interrupted
+	  dind::wait-for-ready
+      fi
   fi
   dind::step "Cluster Info"
   echo "Network Mode: ${IP_MODE}"
