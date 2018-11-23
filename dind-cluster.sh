@@ -1819,7 +1819,19 @@ function dind::up {
       manifest_base=https://docs.projectcalico.org/${CALICO_VERSION:-v3.3}/getting-started/kubernetes/installation
       dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/hosted/etcd.yaml
       dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/rbac.yaml
-      dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/hosted/calico.yaml
+      tmpd=$(mktemp -d calico.XXXXXX)
+      wget ${manifest_base}/hosted/calico.yaml -O ${tmpd}/calico.yaml
+      if [ "${CALICO_NODE_IMAGE}" ]; then
+	  docker save --output ${tmpd}/calico-node.tar ${CALICO_NODE_IMAGE}
+	  docker cp ${tmpd}/calico-node.tar $(dind::master-name):/calico-node.tar
+	  docker exec $(dind::master-name) docker load -i /calico-node.tar
+	  for ((n=1; n <= NUM_NODES; n++)); do
+ 	      docker cp ${tmpd}/calico-node.tar $(dind::node-name ${n}):/calico-node.tar
+	      docker exec $(dind::node-name ${n}) docker load -i /calico-node.tar
+	  done
+	  sed -i "s,quay.io/calico/node:.*,${CALICO_NODE_IMAGE}," ${tmpd}/calico.yaml
+      fi
+      dind::retry "${kubectl}" --context "$ctx" apply -f ${tmpd}/calico.yaml
       ;;
     calico-kdd)
       manifest_base=https://docs.projectcalico.org/${CALICO_VERSION:-v3.3}/getting-started/kubernetes/installation
