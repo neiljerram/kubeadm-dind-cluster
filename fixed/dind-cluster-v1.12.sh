@@ -1793,7 +1793,9 @@ function dind::up {
     calico)
       manifest_base=https://docs.projectcalico.org/${CALICO_VERSION:-v3.3}/getting-started/kubernetes/installation
       dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/hosted/etcd.yaml
-      dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/rbac.yaml
+      if [ "${CALICO_VERSION:-v3.3}" != master ]; then
+	  dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/rbac.yaml
+      fi
       tmpd=$(mktemp -d calico.XXXXXX)
       wget ${manifest_base}/hosted/calico.yaml -O ${tmpd}/calico.yaml
       if [ "${CALICO_NODE_IMAGE}" ]; then
