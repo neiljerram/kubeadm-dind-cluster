@@ -1832,6 +1832,7 @@ function dind::up {
 	  sed -i "s,quay.io/calico/node:.*,${CALICO_NODE_IMAGE}," ${tmpd}/calico.yaml
       fi
       dind::retry "${kubectl}" --context "$ctx" apply -f ${tmpd}/calico.yaml
+      dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/hosted/calicoctl.yaml
       ;;
     calico-kdd)
       manifest_base=https://docs.projectcalico.org/${CALICO_VERSION:-v3.3}/getting-started/kubernetes/installation
