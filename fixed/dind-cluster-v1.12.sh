@@ -49,7 +49,7 @@ if [[ $(uname) == Linux && -z ${DOCKER_HOST:-} ]]; then
     using_local_linuxdocker=1
 fi
 
-EMBEDDED_CONFIG=y;DIND_IMAGE=mirantis/kubeadm-dind-cluster:v1.12
+EMBEDDED_CONFIG=y;DIND_IMAGE=calico/kubeadm-dind-cluster:v1.12
 
 # dind::localhost provides the local host IP based on the address family used for service subnet.
 function dind::localhost() {
