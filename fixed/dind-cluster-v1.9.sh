@@ -1781,10 +1781,6 @@ function dind::up {
     # FIXME: check for taint & retry if it's there
     "${kubectl}" --context "$ctx" taint nodes $(dind::master-name) node-role.kubernetes.io/master- || true
   fi
-  if [[ ${CNI_PLUGIN} = "calico" ]] && dind::kubeadm-version-at-least 1 12; then
-    echo >&2 "WARNING: for Kubernetes 1.12+, CNI_PLUGIN=calico is the same as CNI_PLUGIN=calico-kdd"
-    CNI_PLUGIN=calico-kdd
-  fi
   case "${CNI_PLUGIN}" in
     bridge | ptp)
       dind::create-static-routes
@@ -1795,13 +1791,27 @@ function dind::up {
       dind::retry "${kubectl}" --context "$ctx" apply --validate=false -f "https://github.com/coreos/flannel/blob/master/Documentation/kube-flannel.yml?raw=true"
       ;;
     calico)
-      dind::retry "${kubectl}" --context "$ctx" apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/etcd.yaml
-      dind::retry "${kubectl}" --context "$ctx" apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/rbac.yaml
-      dind::retry "${kubectl}" --context "$ctx" apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/calico.yaml
+      manifest_base=https://docs.projectcalico.org/${CALICO_VERSION:-v3.3}/getting-started/kubernetes/installation
+      dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/hosted/etcd.yaml
+      dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/rbac.yaml
+      tmpd=$(mktemp -d calico.XXXXXX)
+      wget ${manifest_base}/hosted/calico.yaml -O ${tmpd}/calico.yaml
+      if [ "${CALICO_NODE_IMAGE}" ]; then
+	  docker save --output ${tmpd}/calico-node.tar ${CALICO_NODE_IMAGE}
+	  docker cp ${tmpd}/calico-node.tar $(dind::master-name):/calico-node.tar
+	  docker exec $(dind::master-name) docker load -i /calico-node.tar
+	  for ((n=1; n <= NUM_NODES; n++)); do
+ 	      docker cp ${tmpd}/calico-node.tar $(dind::node-name ${n}):/calico-node.tar
+	      docker exec $(dind::node-name ${n}) docker load -i /calico-node.tar
+	  done
+	  sed -i "s,quay.io/calico/node:.*,${CALICO_NODE_IMAGE}," ${tmpd}/calico.yaml
+      fi
+      dind::retry "${kubectl}" --context "$ctx" apply -f ${tmpd}/calico.yaml
       ;;
     calico-kdd)
-      dind::retry "${kubectl}" --context "$ctx" apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml
-      dind::retry "${kubectl}" --context "$ctx" apply -f https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+      manifest_base=https://docs.projectcalico.org/${CALICO_VERSION:-v3.3}/getting-started/kubernetes/installation
+      dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/hosted/rbac-kdd.yaml
+      dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
       ;;
     weave)
       dind::retry "${kubectl}" --context "$ctx" apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(${kubectl} --context "$ctx" version | base64 | tr -d '\n')"
