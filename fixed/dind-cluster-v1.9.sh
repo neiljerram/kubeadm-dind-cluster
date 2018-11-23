@@ -1793,8 +1793,10 @@ function dind::up {
     calico)
       manifest_base=https://docs.projectcalico.org/${CALICO_VERSION:-v3.3}/getting-started/kubernetes/installation
       dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/hosted/etcd.yaml
-      dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/rbac.yaml
-      tmpd=$(mktemp -d calico.XXXXXX)
+      if [ "${CALICO_VERSION:-v3.3}" != master ]; then
+	  dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/rbac.yaml
+      fi
+      tmpd=$(mktemp -d -t calico.XXXXXX)
       wget ${manifest_base}/hosted/calico.yaml -O ${tmpd}/calico.yaml
       if [ "${CALICO_NODE_IMAGE}" ]; then
 	  docker save --output ${tmpd}/calico-node.tar ${CALICO_NODE_IMAGE}
@@ -1807,6 +1809,7 @@ function dind::up {
 	  sed -i "s,quay.io/calico/node:.*,${CALICO_NODE_IMAGE}," ${tmpd}/calico.yaml
       fi
       dind::retry "${kubectl}" --context "$ctx" apply -f ${tmpd}/calico.yaml
+      dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/hosted/calicoctl.yaml
       ;;
     calico-kdd)
       manifest_base=https://docs.projectcalico.org/${CALICO_VERSION:-v3.3}/getting-started/kubernetes/installation
