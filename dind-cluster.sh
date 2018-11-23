@@ -1796,7 +1796,7 @@ function dind::up {
       if [ "${CALICO_VERSION:-v3.3}" != master ]; then
 	  dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/rbac.yaml
       fi
-      tmpd=$(mktemp -d calico.XXXXXX)
+      tmpd=$(mktemp -d -t calico.XXXXXX)
       wget ${manifest_base}/hosted/calico.yaml -O ${tmpd}/calico.yaml
       if [ "${CALICO_NODE_IMAGE}" ]; then
 	  docker save --output ${tmpd}/calico-node.tar ${CALICO_NODE_IMAGE}
