@@ -1296,7 +1296,7 @@ function dind::init {
       mgmt_cidr=${mgmt_net_cidrs[1]}
   fi
   local master_ip=$( dind::make-ip-from-cidr ${mgmt_cidr} 2 )
-  docker cp image/kubeadm.conf.${template}.tmpl ${master_name}:/etc/kubeadm.conf.${template}.tmpl
+  docker cp ../kubeadm-dind-cluster/image/kubeadm.conf.${template}.tmpl ${master_name}:/etc/kubeadm.conf.${template}.tmpl
   docker exec -i "$master_name" bash <<EOF
 sed -e "s|{{ADV_ADDR}}|${master_ip}|" \
     -e "s|{{POD_SUBNET_DISABLE}}|${pod_subnet_disable}|" \
