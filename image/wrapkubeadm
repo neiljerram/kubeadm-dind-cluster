@@ -44,9 +44,7 @@ apiserver_insecure_bind_address='.spec.containers[0].command|=map(select(startsw
 apiserver_insecure_bind_port='.spec.containers[0].command|=map(select(startswith("--insecure-port=")|not))+["--insecure-port=8080"]'
 
 function dind::cluster-cidr {
-  if [[ ! -e "/v6-mode" ]]; then
-    ip addr show docker0 | grep -w inet | awk '{ print $2; }'
-  fi
+	echo "192.168.0.0/16"
 }
 
 # Update kube-proxy CIDR, enable --masquerade-all and disable conntrack (see dind::frob-proxy below)
@@ -245,7 +243,7 @@ function dind::frob-proxy-configmap {
   # FIXME: here we assume that max: and maxPerCore:
   # only occur within conntrack: section
   sed -i "s/\bmax:.*/max: 0/;s/\bmaxPerCore:.*/maxPerCore: 0/" "${conffile}"
-  sed -i "s/\bmasqueradeAll:.*/masqueradeAll: true/" "${conffile}"
+  sed -i "s/\bmasqueradeAll:.*/masqueradeAll: false/" "${conffile}"
   # Use a simple hack described in comments for
   # https://github.com/kubernetes/kubernetes/issues/30558
   # to replace just one key in the configmap
