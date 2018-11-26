@@ -1383,6 +1383,8 @@ function dind::init {
       mgmt_cidr=${mgmt_net_cidrs[1]}
   fi
   local master_ip=$( dind::make-ip-from-cidr ${mgmt_cidr} 2 )
+  docker exec "$master_name" sed -i 's,masqueradeAll: true,masqueradeAll: false,' /usr/local/bin/wrapkubeadm
+  docker exec "$master_name" sed -i 's,local cluster_cidr=.*,local cluster_cidr="192.168.0.0/16",' /usr/local/bin/wrapkubeadm
   docker exec -i "$master_name" bash <<EOF
 sed -e "s|{{ADV_ADDR}}|${master_ip}|" \
     -e "s|{{POD_SUBNET_DISABLE}}|${pod_subnet_disable}|" \
