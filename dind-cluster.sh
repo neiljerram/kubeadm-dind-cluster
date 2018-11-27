@@ -1921,7 +1921,7 @@ function dind::up {
  	      docker cp ${tmpd}/calico-node.tar $(dind::node-name ${n}):/calico-node.tar
 	      docker exec $(dind::node-name ${n}) docker load -i /calico-node.tar
 	  done
-	  sed -i "s,quay.io/calico/node:.*,${CALICO_NODE_IMAGE}," ${tmpd}/calico.yaml
+	  sed -i "s,image: .*calico/node:.*,image: ${CALICO_NODE_IMAGE}," ${tmpd}/calico.yaml
       fi
       dind::retry "${kubectl}" --context "$ctx" apply -f ${tmpd}/calico.yaml
       dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/hosted/calicoctl.yaml
