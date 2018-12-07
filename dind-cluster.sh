@@ -1823,7 +1823,7 @@ function dind::up {
       fi
       tmpd=$(mktemp -d -t calico.XXXXXX)
       curl -sSLo ${tmpd}/calico.yaml ${manifest_base}/hosted/calico.yaml
-      if [ "${CALICO_NODE_IMAGE}" ]; then
+      if [ "${CALICO_NODE_IMAGE:-}" ]; then
 	  docker save --output ${tmpd}/calico-node.tar ${CALICO_NODE_IMAGE}
 	  docker cp ${tmpd}/calico-node.tar $(dind::master-name):/calico-node.tar
 	  docker exec $(dind::master-name) docker load -i /calico-node.tar
