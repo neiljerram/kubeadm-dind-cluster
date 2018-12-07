@@ -1822,7 +1822,7 @@ function dind::up {
 	  dind::retry "${kubectl}" --context "$ctx" apply -f ${manifest_base}/rbac.yaml
       fi
       tmpd=$(mktemp -d -t calico.XXXXXX)
-      wget ${manifest_base}/hosted/calico.yaml -O ${tmpd}/calico.yaml
+      curl -sSLo ${tmpd}/calico.yaml ${manifest_base}/hosted/calico.yaml
       if [ "${CALICO_NODE_IMAGE}" ]; then
 	  docker save --output ${tmpd}/calico-node.tar ${CALICO_NODE_IMAGE}
 	  docker cp ${tmpd}/calico-node.tar $(dind::master-name):/calico-node.tar
